@@ -18,6 +18,7 @@ handle_command:        Alınan sesli komutu işler ve uygun bir Arduino komutunu
 
 
 Özellikler:
+
 Sesli Komutlar ve Yanıtlar:
 Kullanıcı komutlarını mikrofondan alır, bu komutları sesli olarak yanıtlar.
 "Dans et", "zıpla", "selam" gibi komutlara karşılık çeşitli Arduino hareket komutları gönderir.
