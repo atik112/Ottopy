@@ -3,12 +3,19 @@ Ayrıca, bir kullanıcı veritabanını güncelleyerek, kullanıcının önceki 
 
 Ana Fonksiyonlar:
 find_arduino_port:     Arduino'nun bağlı olduğu seri portu bulur.
+
 send_command:          Verilen komutu Arduino'ya gönderir.
+
 listen_for_commands:   Mikrofon üzerinden gelen sesli komutları dinler ve bu komutları metne dönüştürür.
+
 konus:                 Metni Türkçe olarak sesli bir şekilde okur.
+
 get_ai_response:       OpenAI API üzerinden bir komuta yanıt almak için kullanılır.
+
 get_sentiment:         OpenAI üzerinden alınan cevapların duygusal analizini yaparak, ilgili Arduino komutlarını gönderir (örneğin, "mutlu" bir tepki için farklı bir davranış sergiler).
+
 handle_command:        Alınan sesli komutu işler ve uygun bir Arduino komutunu gönderir.
+
 
 Özellikler:
 Sesli Komutlar ve Yanıtlar:
