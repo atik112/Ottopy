@@ -3,9 +3,9 @@ import time
 import glob
 import random
 import serial
+import time
 import speech_recognition as sr
 import pygame
-import serial.tools.list_ports
 import playsound3
 import traceback
 from gtts import gTTS
@@ -15,40 +15,16 @@ import threading
 import schedule
 
 user_data = {}
-
+walk=True
 # OpenAI API anahtarını çevresel değişkenden al
 openai.api_key = os.getenv("OPENAI_API_KEY")  # Çevresel değişkeni kullanarak API anahtarını alın
 
 # Arduino'nun bağlı olduğu seri portu belirtin
-def find_arduino_port():
-    ports = serial.tools.list_ports.comports()
-    for port in ports:
-        # Eğer port, 'Arduino' veya 'USB' kelimelerini içeriyorsa, muhtemelen Arduino bağlıdır
-        if 'Arduino' in port.description or 'USB' in port.description:
-            return port.device
-    return None  # Arduino bulunmazsa None döner
-
-# Arduino'nun bağlı olduğu seri portu bul
-arduino_port = find_arduino_port()
-print(arduino_port)
-
-if arduino_port is None:
-    print("Arduino bağlı seri port bulunamadı.")
-    exit(1)
-
+arduino_port = "COM3"  # Windows için COM3, Linux/Mac için "/dev/ttyUSB0" olabilir
 baud_rate = 9600  # Arduino'nun seri iletişim hızı
 
-try:
 # Seri portu aç
-    ser = serial.Serial(arduino_port, baud_rate)
-    print(f"{arduino_port} seri portu açıldı.")
-    time.sleep(2)
-    if not ser.is_open:
-        print("Seri port açılamadı.")
-        exit(1) # Programı sonlandır
-except serial.SerialException as e:
-    print(f"Seriport hatası :{e}")
-    exit(1)
+ser = serial.Serial(arduino_port, baud_rate)
 fart=random.randint(400, 1000)
 fart_reset=0
 
@@ -67,29 +43,21 @@ def daily_task():
 schedule.every().day.at("21:00").do(daily_task)
 
 def update_user_data(user_id, command, response):
-    if not os.path.exists("use_data.json"):
-        with open ("user_data.json","w") as f:
-            json.dump({},f, indent =4)
-
-    try:
-        if user_id not in user_data:
-            user_data[user_id] = {"commands": [], "responses": []}
-        
-        user_data[user_id]["commands"].append(command)
-        user_data[user_id]["responses"].append(response)
-        
-        with open('user_data.json', 'w') as f:
-            json.dump(user_data, f, indent=4)  # Veriyi daha okunabilir şekilde kaydet
-    except Exception as e:
-        print(f"User data güncellenemedi: {e}")
+    if user_id not in user_data:
+        user_data[user_id] = {"commands": [], "responses": []}
+    
+    user_data[user_id]["commands"].append(command)
+    user_data[user_id]["responses"].append(response)
+    
+    # Veriyi dosyaya kaydet
+    with open('user_data.json', 'w') as f:
+        json.dump(user_data, f)
 
 def get_user_preferences(user_id):
     # Kullanıcı tercihlerinden öğrenme
     if user_id in user_data:
         return user_data[user_id]
-    else:
-        print(f"User{user_id} preferences not found.")
-    return {}
+    return None
 
 def listen_for_commands():
     """Mikrofonla sesli komutları alır."""
@@ -104,9 +72,6 @@ def listen_for_commands():
         except sr.WaitTimeoutError:
             print("Zaman aşımına uğradı, lütfen tekrar deneyin.")
             return None
-        except sr.RequestError as e:
-            print(f"Google API hatası: {e}")
-            return None
 
     try:
         command = recognizer.recognize_google(audio, language="tr-TR")  # Google API kullanarak ses metne dönüştür
@@ -114,9 +79,14 @@ def listen_for_commands():
         return command.lower()
     except sr.UnknownValueError:
         print("Anlaşılamayan bir ses. Lütfen tekrar deneyin.")
+        if walk:
+            secenek=["turn_right","turn_left","walk_forward","walk_backward"]
+            secim = random.choice(secenek)
+            send_command(secim) 
         return None
     except sr.RequestError as e:
         print(f"Google API hatası: {e}")
+        send_command(secim) 
         return None
 
 def konus(metin):
@@ -133,30 +103,16 @@ def opening_sound():
     """Açılışta bir ses dosyası çalar."""
     filenameOpen = random.choice(opensound)  # 'open' klasöründen rastgele bir ses seç
     print(f"Çalan ses: {filenameOpen}")
-    try:
-        pygame.mixer.init()  # pygame ses modülünü başlat
-        pygame.mixer.music.load(filenameOpen)  # Ses dosyasını yükle
-        pygame.mixer.music.play()  # Sesi çalmaya başla
-    except pygame.error as e:
-        print(f"Ses hatası: {e}")
+    pygame.mixer.init()  # pygame ses modülünü başlat
+    pygame.mixer.music.load(filenameOpen)  # Ses dosyasını yükle
+    pygame.mixer.music.play()  # Sesi çalmaya başla
     while pygame.mixer.music.get_busy():  # Ses bitene kadar bekle
         time.sleep(0.1)  # Kısa bir süre bekleyerek CPU'nun boşta kalmasını sağla
         
 def play_sound():
     """Açılışta bir ses dosyası çalmayı başlat."""
     opening_sound()
-
-def tell_joke():
-    jokes=[
-        "Bir robot neden soğuk bir kahve içer? Çünkü sıcak içecekleri sevmiyor!",
-        "Robotlar neden bazen yavaş cevap verir? Çünkü biraz donmuşlar!",
-        "Hangi hayvan bilgisayar kullanamaz? Kediler, çünkü hep 'fareyi' kaybederler!",
-        "Saat neden her zaman yavaş çalışır? Çünkü zamanla yarışıyordur!"
-    ]
     
-    joke =random.choice(jokes)
-    konus(joke)
-
 def send_command(command):
     """Verilen komutu Arduino'ya gönderir."""
     ser.write((command + '\n').encode())  # Komut gönder
@@ -243,9 +199,12 @@ def handle_command(command):
     """Komutu analiz et ve gerekirse Arduino'ya komut gönder."""
     user_id="Meva"
     user_prefereces=get_user_preferences(user_id)
+    ai_response=""
     
     if command == "Dans et":
-        send_command("dance")
+        dancecommand=["moonwalker","dance"]
+        dance_choice=random.choice(dancecommand)
+        send_command(dance_choice)
     elif command == "zıpla":
         send_command("jump")
         ai_response ="Elimden bu kadar geliyor"
@@ -262,17 +221,25 @@ def handle_command(command):
         send_command("shaka_leg")
         ai_response = "Teşekkür ederim, sen de kendine iyi bak."
         konus(ai_response)
-    elif command in ["gez", "gezin", "yürü", "yürüyüş yap", "dolan", "gez gel" ]:
-        send_command("wander")
-    elif command in ["kaç", "geri git", "kaçın", "kaç benden"]:
-        send_command("get_back")
-    elif command in ["pırtlat", "pırt yap"]:
+    elif command == "gez":
+        for i in range(1,4):
+            send_command("walk_forward")
+        turncommand=["turn_right","turn_left"]
+        turn_choice=random.choice(turncommand)
+        send_command(turn_choice)
+    elif command in["kaç","geri git"]:
+        for i in range(1,4):
+            send_command("walk_backward")
+        turncommand=["turn_right","turn_left"]
+        turn_choice=random.choice(turncommand)
+        send_command(turn_choice)
+    elif command == "Pırtlat" or command == "pırt yap":
         send_command("fart")
+    elif command in ["dur", "tamam dur","gezme","yerinde dur"]:
+        ai_response="Tamam duruyorum"
+        walk=False
     elif command == "sihir yap":
         send_command("magic")
-    elif command == "şaka yap":
-        tell_joke()
-        send_command("bend")
     elif command == "kapat":
         ai_response = "Kapanmamı istiyor musun?"
         print(ai_response)
@@ -284,9 +251,7 @@ def handle_command(command):
                 ai_response = "Tamam, kapanıyorum."
                 print(ai_response)
                 konus(ai_response)
-                if ser.is_open:
-                    ser.close()  # Seri portu kapat
-                    print("Seri port kapatıldı.")
+                ser.close()
                 return True  # Programı sonlandırmak için True döndür
             elif command:
                 ai_response = "Anladım, devam ediyorum."
@@ -333,8 +298,8 @@ def handle_command(command):
 
 def main_loop():
     global fart_reset
-    fart_reset+=random.randint(1,5)
-    if fart_reset >= fart:
+    fart_reset+=1
+    if fart_reset==fart:
         send_command("fart")
         fart_reset=0
     
@@ -355,5 +320,6 @@ try:
     main_thread.start()
 except KeyboardInterrupt:
     print("Program sonlandırıldı.")
+    ser.close()
 """finally:
     ser.close()  # Seri portu kapat"""
