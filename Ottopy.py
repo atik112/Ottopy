@@ -355,3 +355,5 @@ try:
     main_thread.start()
 except KeyboardInterrupt:
     print("Program sonlandırıldı.")
+"""finally:
+    ser.close()  # Seri portu kapat"""
