@@ -15,7 +15,7 @@ pip install pygame simpleaudio gtts openai speechrecognition schedule
 API Anahtarı: OpenAI API anahtarınızı alıp çevresel değişken olarak ayarlayın.<br>
 Arduino Bağlantısı: Arduino'nun doğru seri port üzerinden bağlı olduğundan emin olun.<br>
 <b>Çalıştırma:</b><br> Python dosyasını çalıştırarak robotu kontrol etmeye başlayın.<br>
-python robotik_asistan.py
+python Ottopy.py
 
 <b>Desteklenen Komutlar</b><br>
 "Dans et": Dans etmeye başlar.<br>
