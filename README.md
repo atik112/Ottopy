@@ -1,33 +1,26 @@
-Bilgisayar ile Arduino arasında bağlantı kurarak Otto'ya ek özelliler ekler. Kod, sesli komutları alır, bu komutlara karşılık gelen tepkileri belirler ve Arduino'ya sinyaller gönderir.
-Ayrıca, bir kullanıcı veritabanını güncelleyerek, kullanıcının önceki komutlarını ve robotun yanıtlarını saklar
+<b>Robotik Asistan ve Arduino Etkileşimi</b><br>
+Bu proje, bir robotik asistanın sesli komutları anlayarak Arduino ile etkileşime girmesini sağlar. Kullanıcı komutları vererek robotu kontrol edebilir ve OpenAI yapay zekasıyla etkileşimde bulunabilir.
 
-Ana Fonksiyonlar:
-find_arduino_port:     Arduino'nun bağlı olduğu seri portu bulur.
+<b>Özellikler:</b><br>
+Sesli komutla robotu kontrol etme (örneğin: "Dans et", "Zıpla").<br>
+Arduino ile etkileşim.<br>
+OpenAI yapay zekasından yanıt alma.<br>
+Duygu analizi yaparak robotun tepkisini ayarlama.<br>
+Türkçe sesli yanıtlar.<br>
 
-send_command:          Verilen komutu Arduino'ya gönderir.
+<b>Bu projeyi çalıştırmak için aşağıdaki Python kütüphanelerini yükleyin:</b><br>
+pip install pygame simpleaudio gtts openai speechrecognition schedule
 
-listen_for_commands:   Mikrofon üzerinden gelen sesli komutları dinler ve bu komutları metne dönüştürür.
+<b>Kullanım</b><br>
+API Anahtarı: OpenAI API anahtarınızı alıp çevresel değişken olarak ayarlayın.<br>
+Arduino Bağlantısı: Arduino'nun doğru seri port üzerinden bağlı olduğundan emin olun.<br>
+<b>Çalıştırma:</b><br> Python dosyasını çalıştırarak robotu kontrol etmeye başlayın.<br>
+python robotik_asistan.py
 
-konus:                 Metni Türkçe olarak sesli bir şekilde okur.
-
-get_ai_response:       OpenAI API üzerinden bir komuta yanıt almak için kullanılır.
-
-get_sentiment:         OpenAI üzerinden alınan cevapların duygusal analizini yaparak, ilgili Arduino komutlarını gönderir (örneğin, "mutlu" bir tepki için farklı bir davranış sergiler).
-
-handle_command:        Alınan sesli komutu işler ve uygun bir Arduino komutunu gönderir.
-
-
-Özellikler:
-
-Sesli Komutlar ve Yanıtlar:
-Kullanıcı komutlarını mikrofondan alır, bu komutları sesli olarak yanıtlar.
-"Dans et", "zıpla", "selam" gibi komutlara karşılık çeşitli Arduino hareket komutları gönderir.
-
-AI Tabanlı Yanıtlar:
-OpenAI API kullanılarak, kullanıcı komutlarına doğal dilde AI yanıtları sağlanır.
-
-Duygu Durumu:
-OpenAI'dan alınan göre robot, AI üzerinden bir duygu analizi yapar ve bu duygusal duruma göre Arduino'ya farklı komutlar gönderir (örneğin, "Mutluluk" için "OttoHappy" komutunu gönderir).
-
-Zamanlanmış Görevler:
-Günlük görevler, örneğin uyku saati hatırlatmaları için schedule kütüphanesi kullanılır.
+<b>Desteklenen Komutlar</b><br>
+"Dans et": Dans etmeye başlar.<br>
+"Zıpla": Robot zıplar.<br>
+"Selam": Merhaba yanıtı verir.<br>
+"Gez": Robot ileri hareket eder ve döner.<br>
+"Dur": Robot durur.<br>
+"Kapat": Robot kapanma komutunu bekler.
