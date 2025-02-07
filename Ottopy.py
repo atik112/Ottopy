@@ -255,7 +255,7 @@ def handle_command(command):
         konus(ai_response)
         start_time = time.time()
         while time.time() - start_time < 10:
-            command = listen_continuously()
+            command = listen_once()
             if command in ["evet", "tamam", "olur", "kapat", "kapan", "kapanabilirsin"]:
                 ai_response = "Tamam, kapanıyorum."
                 konus(ai_response)
