@@ -61,6 +61,18 @@ def _localize_emotion(e: str) -> str:
     if not e: return ""
     return _EMO_MAP.get((e or "").strip().lower(), (e or ""))
 
+def _get_default_microphone_id() -> str:
+    try:
+        default_input = sounddevice.default.device[0]
+        if default_input is not None:
+            device_info = sounddevice.query_devices(default_input, "input")
+            mic_name = device_info.get("name")
+            if mic_name:
+                return f"mic:{mic_name}"
+            return f"mic_index:{default_input}"
+    except Exception:
+        pass
+    return "guest"
 
 def _open_arduino_controller():
     # Try different constructor signatures to be compatible with your current arduino_controller.py
@@ -138,6 +150,13 @@ def main():
         speak("Bir saniye, yüzünü tanımaya çalışıyorum...")
         face_frame = camera.capture_frame()
         name = recognize_face(face_frame)
+        
+        voice_id = name if name else _get_default_microphone_id()
+        stored_name = get_user_name_by_voice_id(voice_id) if voice_id else None
+        is_new_user = stored_name is None
+
+        if stored_name:
+            name = stored_name
 
         if name:
             if needs_goal_review(user=name):
@@ -154,15 +173,21 @@ def main():
             name_input = listen_and_recognize()
             if name_input:
                 name = name_input.strip().split(" ")[0]
+                voice_id = name or voice_id
+                is_new_user = True
                 registered = register_new_face(name, face_frame)
                 if registered:
                     speak(f"Memnun oldum {name}, yüzünü hafızama kaydettim.")
                 else:
                     speak("Yüzünü algılayamadım ama ismini hatırlayacağım.")
+            else:
+                is_new_user = False
 
         if not name:
             name = "Misafir"
-        register_new_user(name, name)
+            is_new_user = False
+        if is_new_user and voice_id and name != "Misafir":
+            register_new_user(voice_id, name)
 
         mood = mood_tracker.get_current_mood()
         memory = get_memory_about(name)
@@ -188,15 +213,15 @@ def main():
             if "neden böyle hissediyorum" in lower_cmd or "son zamanlarda nasılım" in lower_cmd:
                 continue
             if "artık ciddi konuş" in lower_cmd or "resmi ol" in lower_cmd:
-                set_user_mode(name, "resmi"); speak("Tamam. Bundan sonra daha ciddi konuşacağım."); continue
+                set_user_mode(voice_id, "resmi"); speak("Tamam. Bundan sonra daha ciddi konuşacağım."); continue
             if "daha komik ol" in lower_cmd or "komik cevaplar" in lower_cmd:
-                set_user_mode(name, "komik"); speak("Haha! Harika! Bundan sonra daha komik olacağım."); continue
+                set_user_mode(voice_id, "komik"); speak("Haha! Harika! Bundan sonra daha komik olacağım."); continue
             if "robot gibi" in lower_cmd or "robotik konuş" in lower_cmd:
-                set_user_mode(name, "robotik"); speak("Mod ayarlandı. Artık robot gibi konuşuyorum."); continue
+                set_user_mode(voice_id, "robotik"); speak("Mod ayarlandı. Artık robot gibi konuşuyorum."); continue
             if "samimi ol" in lower_cmd or "arkadaşça konuş" in lower_cmd:
-                set_user_mode(name, "samimi"); speak("Peki! Daha içten ve arkadaşça konuşacağım."); continue
+                set_user_mode(voice_id, "samimi"); speak("Peki! Daha içten ve arkadaşça konuşacağım."); continue
             if "üzgünsem moral ver" in lower_cmd:
-                added = add_behavior_rule(name, "when_user_is", "üzgün")
+                added = add_behavior_rule(voice_id, "when_user_is", "üzgün")
                 speak("Anlaşıldı. Üzgün olduğunda seni neşelendirmeye çalışacağım." if added else "Zaten böyle bir kuralım vardı.")
                 continue
 
@@ -226,7 +251,7 @@ def main():
                     speak("Meva hakkında bir şey yazmamışım."); continue
 
             # generate response & action
-            mode = get_user_mode(name)
+            mode = get_user_mode(voice_id)
             response = get_ai_response(command, mood, name, mode)
             sentiment_raw = get_sentiment(response)
             sentiment = _localize_emotion(sentiment_raw)
