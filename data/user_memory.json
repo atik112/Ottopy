@@ -1,0 +1,32 @@
+{
+  "users": {
+    "null": {
+      "name": null,
+      "mode": "samimi"
+    },
+    "efendim": {
+      "name": "efendim",
+      "mode": "samimi"
+    },
+    "dedim": {
+      "name": "dedim",
+      "mode": "samimi"
+    },
+    "bir": {
+      "name": "bir",
+      "mode": "samimi"
+    },
+    "bahşiş": {
+      "name": "bahşiş",
+      "mode": "samimi"
+    },
+    "Ben": {
+      "name": "Ben",
+      "mode": "samimi"
+    },
+    "Misafir": {
+      "name": "Misafir",
+      "mode": "samimi"
+    }
+  }
+}
