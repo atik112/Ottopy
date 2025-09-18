@@ -75,8 +75,9 @@ class RealisticOttoEmotionBridge:
         print(f"[Mood] Güncel skor: {score}")
 
         command = map_emotion_to_command(sentiment)
-        print(f"[Otto] Duyguya göre komut: {command}")
-        self.arduino.send_data(translate_for_arduino(translate_for_arduino(command)))
+        converted_command = translate_for_arduino(command)
+        print(f"[Otto] Duyguya göre komut: {command} -> Arduino: {converted_command}")
+        self.arduino.send_data(converted_command)
 
 
 # Komut köprüsü
@@ -86,8 +87,9 @@ class UserCommandBridge:
 
     def process_user_command(self, user_text):
         command = map_text_command_to_otto_action(user_text)
-        print(f"[Kullanıcı Komutu] '{user_text}' -> Otto komutu: {command}")
-        self.arduino.send_data(translate_for_arduino(translate_for_arduino(command)))
+        converted_command = translate_for_arduino(command)
+        print(f"[Kullanıcı Komutu] '{user_text}' -> Otto komutu: {command} -> Arduino: {converted_command}")
+        self.arduino.send_data(converted_command)
 
 
 # Ana kontrol sistemi
