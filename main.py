@@ -11,6 +11,7 @@ from ai.user_preferences import (
     set_user_mode,
     get_user_mode
 )
+from ai.mood_manager import get_today_mood
 from otto.otto_memory import get_memory_about, add_memory_about
 from otto.otto_journal import (
     write_to_journal,
@@ -114,6 +115,15 @@ def main():
         pass
 
     camera = Camera()
+
+    daily_mood = get_today_mood()
+    try:
+        current_label = (mood_tracker.get_current_mood().get("mood") or "").lower()
+    except Exception:
+        current_label = ""
+    if daily_mood and daily_mood.lower() not in current_label:
+        mood_tracker.update_mood(daily_mood)
+    
     otto_system = OttoControlSystem(mood_tracker_module=mood_tracker, arduino_controller=arduino)
 
     try:
@@ -156,7 +166,12 @@ def main():
 
         mood = mood_tracker.get_current_mood()
         memory = get_memory_about(name)
-        if name == "Meva":
+        if daily_mood:
+            if name == "Meva":
+                speak(f"Meva... en yakın arkadaşım. Bugün kendimi {daily_mood} hissediyorum.")
+            else:
+                speak(f"{name}, bugün kendimi {daily_mood} hissediyorum.")
+        elif name == "Meva":
             speak(f"Meva... en yakın arkadaşım. Bugün biraz {mood.get('mood','nötr')} hissediyorum.")
         if memory:
             speak(f"Bu arada {name}, hatırlıyor musun? {memory}")
