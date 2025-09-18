@@ -29,7 +29,6 @@ class Camera:
         cv2.resizeWindow("Otto'nun Kamerası", 640, 480)
         while True:
             frame = self.capture_frame()
-            if frame.shape[2] == 4:
             if frame is None:
                 continue
             if frame.ndim == 3 and frame.shape[2] == 4:
@@ -89,10 +88,8 @@ class Camera:
 
     def capture_frame(self):
         frame = self.picam2.capture_array()
-        if frame.shape[2] == 4:
         if frame is not None and frame.ndim == 3 and frame.shape[2] == 4:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-        return frame
         self.last_raw_frame = frame.copy() if frame is not None else None
         processed = self.process_frame(frame)
         return processed
